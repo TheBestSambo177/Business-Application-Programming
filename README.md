@@ -1,5 +1,4 @@
 # Business-Apllication-Programming
 Project
 
-Members: Samuel Kennedy
-       :Javarn Tromp
+Members: Samuel Kennedy, Javarn Tromp
