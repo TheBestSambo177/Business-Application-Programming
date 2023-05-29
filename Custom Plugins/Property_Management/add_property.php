@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Property Management
-Plugin URI: https://i.kym-cdn.com/entries/icons/original/000/032/116/cover1.jpg
+Plugin URI: 
 Description: This plugin will allow you to add, edit, and delete properties from the database.
 Author: Javarn Tromp de Haas
 Version: 0.1
