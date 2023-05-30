@@ -2,7 +2,7 @@
     $servername = "localhost";
     $username = "admin";
     $password = "admin1234";
-    $dbname = "property_booking";
+    $dbname = "custom_plugins";
 
     $conn = new mysqli($servername, $username, $password, $dbname);
 

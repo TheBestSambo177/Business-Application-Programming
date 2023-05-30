@@ -11,7 +11,7 @@
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             echo '<div class="listing">';
-            echo '<img class="hello" src="' . $row["images"] . '" alt="hope this works">';
+            echo '<img class="hello" src="images/properties/' . $row["images"] . '" alt="hope this works">';
             echo '<h2>' . $row["address"] . '</h2>';
             echo '<p>' . 'Located in ' . $row["city"] . '</p>';
             echo '<p>' . '$' . $row["price"] . ' per night.' .'</p>';
