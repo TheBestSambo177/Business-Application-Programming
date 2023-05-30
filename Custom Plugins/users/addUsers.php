@@ -10,14 +10,21 @@
 		$address = $_POST["address"];
 		$licenceNumber = $_POST["licenceNumber"];
 		$photoIdentification = $_POST["photoIdentification"];
-
-        $sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', SHA1('$password'), '$address', '$licenceNumber', '$photoIdentification')";
-        
-        if ($conn->query($sql) === TRUE) {
-            echo "User added added";
-        } else {
-            echo "An error occured";
-        }
+		
+		$checkEmailQuery = "SELECT * from users WHERE email = '$email'";
+		$checkEmailQuery = $conn->query($checkEmailQuery);
+		
+		if ($checkEmailQuery->num_rows > 0) {
+			echo "Email already exists. Please use another one.";
+		} else {
+			$sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', SHA1('$password'), '$address', '$licenceNumber', '$photoIdentification')";
+			
+			if ($conn->query($sql) === TRUE) {
+				echo "User added added";
+			} else {
+				echo "An error occured";
+			}
+		}    
     }
 ?>
 <!DOCTYPE html>
