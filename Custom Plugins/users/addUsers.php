@@ -11,7 +11,7 @@
 		$licenceNumber = $_POST["licenceNumber"];
 		$photoIdentification = $_POST["photoIdentification"];
 
-        $sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', '$password', '$address', '$licenceNumber', '$photoIdentification')";
+        $sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', SHA1('$password'), '$address', '$licenceNumber', '$photoIdentification')";
         
         if ($conn->query($sql) === TRUE) {
             echo "User added added";
