@@ -26,15 +26,11 @@ if (isset($_GET['id'])) {
         $arrivalDate = $_POST['arrival']?? '';
         $departureDate = $_POST['departure']?? '';
 
-        echo '<button><a href="listing.php?id=' . $row["propertyID"] . '">Go Back</a></button>';
+        echo '<button><a href="page_id=16&id=' . $row["propertyID"] . '">Go Back</a></button>';
         echo '<input type="submit" value="Proceed to Checkout">';
        
         echo '</form>';
         
     }
-    
-    
-
-
 }
 ?>
