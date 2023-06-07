@@ -53,34 +53,34 @@ function accounts_shortcode() {
         }    
     }
 
-    <h1>Create User Account</h1>
-    <form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>">
-        <label for="firstName">First Name:</label>
-        <input type="text" name="firstName" id="firstName" required><br>
+    echo "<h1>Create User Account</h1>";
+    echo '<form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>';
+    echo '<label for="firstName">First Name:</label>';
+    echo '<input type="text" name="firstName" id="firstName" required><br>';
 
-        <label for="lastName">Last Name:</label>
-        <input type="text" name="lastName" id="lastName" required><br>
+    echo '<label for="lastName">Last Name:</label>';
+    echo '<input type="text" name="lastName" id="lastName" required><br>';
 
-        <label for="phoneNumber">Phone Number:</label>
-        <input type="text" name="phoneNumber" id="phoneNumber" required><br>
+    echo '<label for="phoneNumber">Phone Number:</label>';
+    echo '<input type="text" name="phoneNumber" id="phoneNumber" required><br>';
 
-        <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required><br>
+    echo '<label for="email">Email:</label>';
+    echo '<input type="email" name="email" id="email" required><br>';
 
-        <label for="password">Password:</label>
-        <input type="password" name="password" id="password" required><br>
+    echo '<label for="password">Password:</label>';
+    echo '<input type="password" name="password" id="password" required><br>';
         
-        <label for="address">Address:</label>
-        <input type="text" name="address" id="address" required><br>
+    echo '<label for="address">Address:</label>';
+    echo '<input type="text" name="address" id="address" required><br>';
         
-        <label for="LicenceNumber">LicenceNumber:</label>
-        <input type="text" name="licenceNumber" id="licenceNumber" required><br>
+    echo '<label for="LicenceNumber">LicenceNumber:</label>';
+    echo '<input type="text" name="licenceNumber" id="licenceNumber" required><br>';
         
-        <label for="photoIdentification">Photo Identification:</label>
-        <input type="text" name="photoIdentification" id="photoIdentification" required><br>
+    echo '<label for="photoIdentification">Photo Identification:</label>';
+    echo '<input type="text" name="photoIdentification" id="photoIdentification" required><br>';
 
-        <input type="submit" name="register" value="Register">
-    </form>
+    echo '<input type="submit" name="register" value="Register">';
+    echo '</form>';
     
 
 }
