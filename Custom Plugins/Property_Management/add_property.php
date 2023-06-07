@@ -75,7 +75,7 @@ function displayProperties() {
 
     $query = "SELECT address, price, city, specifications, images FROM properties";
     $allproperties = $wpdb->get_results($query);
-
+//pr($allfaqs); //uncomment this line to see the out of the query - it is typically an array of objects
     $buffer = '<ol>';
 	//note the naming convention adopted here. results (array) from a query in plural and a singular result element from the array
     foreach ($allproperties as $properties) {
@@ -92,22 +92,23 @@ function property_CRUD() {
 		<h2>Property Management <a href="?page=add_property&command=new" class="add-new-h2">Add New</a></h2>
 		<div style="clear: both"></div>';
 
-		
+// !!WARNING: there is no data validation conducted on the _REQUEST or _POST information. It is highly 
+// recommend to parse ALL data/variables before using		
 	$propertydata = $_POST; //our form data from the insert/update
 	
-
+//current FAQ id for delete/edit commands
 	if (isset($_REQUEST['id'])) 
 		$propertyid = $_REQUEST['id']; 
 	else 
 		$propertyid = '';
 
-		
+//current CRUD command		
 	if (isset($_REQUEST["command"])) 
 		$command = $_REQUEST["command"]; 
 	else 
 		$command = '';
 		
-
+//execute the respective function based on the command		
     switch ($command) {
 	//operations access through the URL	
 		case 'view':
@@ -154,13 +155,18 @@ function property_CRUD() {
 function property_view($id) {
     global $wpdb;
  
-    
+    //https://developer.wordpress.org/reference/classes/wpdb/#protect-queries-against-sql-injection-attacks
+    //safer preferred method of passing values to an SQL query this is not a substitute for data validation
+    //this method merely reduces the likelyhood of SQL injections
     $qry = $wpdb->prepare("SELECT * FROM properties WHERE propertyID = %s",$id);
     
-   
+    //$qry = $wpdb->prepare("SELECT * FROM WAD_faq WHERE id = %s",array($id)); //alternative using an array
+ //pr($qry); //uncomment this line to see the prepared query
     $row = $wpdb->get_row($qry);
     
-   
+    //popular unsafe method
+    //$row = $wpdb->get_row("SELECT * FROM WAD_faq WHERE id = '$id'");
+
     echo $row->address;
     echo $row->price;
     echo $row->city;
@@ -174,7 +180,7 @@ function property_update($data) {
     global $wpdb, $current_user;
 
     if (isset($_POST['submit'])) {
-        $targetDirectory = "images/"; // Specify the directory where you want to store the uploaded files
+        $targetDirectory = __DIR__ . "/images/";
         $targetFile = $targetDirectory . basename($_FILES["images"]["name"]);
         $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
     }
@@ -197,20 +203,44 @@ function property_update($data) {
     return $msg;
 }
 
+function saveImageToDirectory($file, $targetDirectory) {
+    $targetFile = $targetDirectory . basename($file["name"]);
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+    // Check if the file is a valid image
+    $validImageTypes = array("jpg", "jpeg", "png", "gif");
+    if (!in_array($imageFileType, $validImageTypes)) {
+        echo "Error: Invalid image file type.";
+        return false;
+    }
+
+    // Move the uploaded file to the target directory
+    if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+        $completeDirectory = $_SERVER['DOCUMENT_ROOT'] . '/' . $targetFile;
+        echo "The file " . basename($file["name"]) . " has been uploaded and saved at " . $completeDirectory . ".";
+        return true;
+    } else {
+        echo "Sorry, there was an error uploading your file.";
+        return false;
+    }
+}
+
+
+
 function property_insert($data) {
     global $wpdb, $current_user;
 
-    if (isset($_POST['submit'])) {
-        $targetDirectory = "images/"; // Specify the directory where you want to store the uploaded files
-        $targetFile = $targetDirectory . basename($_FILES["images"]["name"]);
-        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    if (isset($_FILES["images"])) {
+        $targetDirectory = "/xampp/htdocs/property_booking/wp-content/plugins/Property_Management/images/";
+        saveImageToDirectory($_FILES["images"], $targetDirectory);
+        echo 'This is set';
+    } else {
+        echo 'something broke';
     }
 
-    if (move_uploaded_file($_FILES["images"]["tmp_name"], $targetFile)) {
-        echo "The file " . basename($_FILES["images"]["name"]) . " has been uploaded.";
-    } else {
-        echo "Sorry, there was an error uploading your file.";
-    }
+
+
+    $targetFile = basename($_FILES["images"]["name"]);     
 
     $wpdb->insert( 'properties',
 		  array(
@@ -236,11 +266,11 @@ function property_delete($id) {
 function property_list() {
     global $wpdb, $current_user;
  
-   
+    //prepare the query for retrieving the FAQ's from the database
     $query = "SELECT propertyID, address, price, city, specifications, images FROM properties";
     $allfaqs = $wpdb->get_results($query);
  
-   
+    //prepare the table and use a default WP style - wp-list-table widefat and manage-column
     echo '<table class="wp-list-table widefat">
          <thead>
          <tr>
@@ -255,12 +285,12 @@ function property_list() {
      
      foreach ($allfaqs as $faq) {
         
-
+ //prepare the URL's for some of the CRUD - note again the use of the menu slug to maintain page location between operations	   
         $edit_link = '?page=add_property&id=' . $faq->propertyID . '&command=edit';
         $view_link ='?page=add_property&id=' . $faq->propertyID . '&command=view';
         $delete_link = '?page=add_property&id=' . $faq->propertyID . '&command=delete';
  
-       
+        //use some inbuilt WP CSS to perform the hover effect for the edit/view/delete links	   
         echo '<tr>';
         echo '<td><strong><a href="'.$edit_link.'" title="Edit question">' . $faq->address . '</a></strong>';
         echo '<div class="row-actions">';
@@ -277,7 +307,7 @@ function property_list() {
      }
     echo '</tbody></table>';
      
- 	
+ //small piece of javascript for the delete confirmation	
      echo "<script type='text/javascript'>
              function doDelete() { if (!confirm('Are you sure?')) return false; }
            </script>";
@@ -286,17 +316,19 @@ function property_list() {
 function property_form($command, $id = null) {
 	global $wpdb; 
 
-
+//if the current command was 'edit' then retrieve the FAQ record based on the id pased to this function
+//!!this SQL querey is open to potential injection attacks
 	if ($command == 'update') {
         $property = $wpdb->get_row("SELECT * FROM properties WHERE propertyID = '$id'");
 	}
 
-
+//if the current command is insert then clear the form variables to ensure we have a blank
+//form before starting	
 	if(empty($property)) { // This happens for 'new' also if get_row fails
 		$property = (object) array('address' => '', 'price' => '', 'city' => '', 'specifications' => '', 'images' => '' );
 	}
 	
-
+//prepare the HTML form	
     echo '<form name="PropertyForm" method="post" enctype="multipart/form-data" action="?page=add_property">
 		<input type="hidden" name="propertyEdit" value="'.$id.'"/>
 		<input type="hidden" name="command" value="'.$command.'"/>
