@@ -1,33 +1,57 @@
-<?php 
+<?php
+	/*
+	Plugin Name: Property Management
+	Plugin URI: 
+	Description: This plugin will allow you to create a user account, sign in to a user account from the database.
+	Author: Samuel Kennedy
+	Version: 1.0
+	Last update: 7 June 2023
+	*/
+
+
+	//Database connection
     include('includes/dbconnect.php');
 
-	//Create user account
-    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["register"])) {
-        $firstName = $_POST["firstName"];
-        $lastName = $_POST["lastName"];
-        $phoneNumber = $_POST["phoneNumber"];
-        $email = $_POST["email"];
-        $password = $_POST["password"];
-		$address = $_POST["address"];
-		$licenceNumber = $_POST["licenceNumber"];
-		$photoIdentification = $_POST["photoIdentification"];
-		
-		$checkEmailQuery = "SELECT * from users WHERE email = '$email'";
-		$checkEmailQuery = $conn->query($checkEmailQuery);
-		
-		if ($checkEmailQuery->num_rows > 0) {
-			echo "Email already exists. Please use another one.";
-		} else {
-			$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-			$sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', '$hashedPassword', '$address', '$licenceNumber', '$photoIdentification')";
+	//Short code
+	add_shortcode('CreateUsers', 'accounts_shortcode');
+
+	function accounts_shortcode() {
+		//Create user account
+		if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["register"])) {
+			$firstName = $_POST["firstName"];
+			$lastName = $_POST["lastName"];
+			$phoneNumber = $_POST["phoneNumber"];
+			$email = $_POST["email"];
+			$password = $_POST["password"];
+			$address = $_POST["address"];
+			$licenceNumber = $_POST["licenceNumber"];
+			$photoIdentification = $_POST["photoIdentification"];
 			
-			if ($conn->query($sql) === TRUE) {
-				echo "User added added";
+			$checkEmailQuery = "SELECT * from users WHERE email = '$email'";
+			$checkEmailQuery = $conn->query($checkEmailQuery);
+			
+			if ($checkEmailQuery->num_rows > 0) {
+				echo "Email already exists. Please use another one.";
 			} else {
-				echo "An error occured";
-			}
-		}    
-    }
+				$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+				$sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', '$hashedPassword', '$address', '$licenceNumber', '$photoIdentification')";
+				
+				if ($conn->query($sql) === TRUE) {
+					echo "User added added";
+				} else {
+					echo "An error occured";
+				}
+			}    
+		}
+
+		
+		
+
+	}
+
+	
+
+	
 	
 	//Login users
 	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
