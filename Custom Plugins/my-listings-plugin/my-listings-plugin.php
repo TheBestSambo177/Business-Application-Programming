@@ -23,13 +23,6 @@
  * Author: Javarn Tromp de Haas & Samuel Kennedy
 */
 
-//Allow the user to create and log into accounts
-function accounts_shortcode() {
-
-}
-add_shortcode('accounts', 'accounts_shortcode');
-
-
 //Display all property listings.
 function my_listings_plugin_shortcode() {
     ob_start();
@@ -41,7 +34,7 @@ function my_listings_plugin_shortcode() {
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             echo '<div class="listing">';
-            echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row["images"], __FILE__) . '" alt="hope this works">';
+            echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row["images"], __FILE__) . '" alt="Image of the property.">';
             echo '<h2>' . $row["address"] . '</h2>';
             echo '<p>' . 'Located in ' . $row["city"] . '</p>';
             echo '<p>' . '$' . $row["price"] . ' per night.' .'</p>';
@@ -72,7 +65,7 @@ function property_listing_shortcode() {
         $row = $wpdb->get_row($sql);
 
         if ($row) {
-            echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row->images, __FILE__) . '" alt="hope this works">';
+            echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row->images, __FILE__) . '" alt="Image of the property.">';
             echo '<h2>' . $row->address . '</h2>';
             echo '<p>' . 'Located in ' . $row->city . '</p>';
             echo '<p>' . '$' . $row->price . ' per night.' .'</p>';
