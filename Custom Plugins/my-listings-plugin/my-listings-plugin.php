@@ -84,7 +84,51 @@ function accounts_shortcode() {
     
 
 }
+
+//Allow the user to log into accounts
+function accountSignIn_shortcode() {
+    //Login users
+	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
+        $email = $_POST["email"];
+        $password = $_POST["password"];
+
+        // Retrieve the user from the database
+        $getUserQuery = "SELECT * FROM users WHERE email = '$email'";
+        $getUserResult = $conn->query($getUserQuery);
+
+        if ($getUserResult->num_rows == 1) {
+            $user = $getUserResult->fetch_assoc();
+            $hashedPassword = $user["password"];
+
+            // Verify the password
+            if (password_verify($password, $hashedPassword)) {
+                // Password is correct, start a new session
+                $_SESSION["email"] = $email;
+                echo "Logged in successfully.";
+            } else {
+                echo "Invalid email or password.";
+            }
+        } else {
+            echo "Invalid email or password.";
+        }
+    }
+
+    echo '<h1>User Login</h1>';
+    echo '<form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>';
+        echo '<label for="email">Email:</label>';
+        echo '<input type="email" name="email" id="email" required><br>';
+
+        echo '<label for="password">Password:</label>';
+        echo '<input type="password" name="password" id="password" required><br>';
+
+        echo '<input type="submit" name="login" value="Login">';
+    echo '</form>';
+}
+
+
+//Users shortcode
 add_shortcode('createUser', 'accounts_shortcode');
+add_shortcode('signIn', 'accountSignIn_shortcode');
 
 
 //Display all property listings.
