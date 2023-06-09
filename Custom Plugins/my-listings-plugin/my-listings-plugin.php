@@ -281,9 +281,7 @@ function checkout_shortcode() {
             echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
-            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
-
-           
+            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';          
            
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 //Run an SQL query to create a booking that gets added to the database.                       
