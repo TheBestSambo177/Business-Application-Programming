@@ -246,40 +246,48 @@ function checkout_shortcode() {
         $listingId = $_GET['id'];
 
         // Retrieve the listing details based on the id.
-        $sql = "Select * from properties where propertyID = $listingId";
+        $sql = "SELECT * FROM properties WHERE propertyID = $listingId";
         $result = $conn->query($sql);
 
-        //Properly format the date.
+        // Properly format the date.
         $arrival = date('d/m/Y', strtotime($_POST['arrival']));
         $departure = date('d/m/Y', strtotime($_POST['departure']));
        
-        //Get the duration of stay in days.
+        // Get the duration of stay in days.
         $date1 = new DateTime($_POST['arrival']);
         $date2 = new DateTime($_POST['departure']);
         $interval = $date1->diff($date2);
         $days = $interval->days;   
 
-        //If the user books at least 4 days, one of them is free.
+        // If the user books at least 4 days, one of them is free.
         if ($days > 3) {
-            $discount = $days -1;
+            $discount = $days - 1;
             $message = ' (Book 3 get one free).';
         } else {
             $discount = $days;
             $message = '';
-        }
-    
-        //Display the details of the booking.
+        }    
+
+        // Display the details of the booking.
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
+
+            $id = $row["propertyID"];
+            $address = $row["address"];
+            $city = $row["city"];
+            $price = $row["price"];
+            $total = $price * $discount;
+
+
             echo '<h3>Confirm your details:</h3>';
             echo '<p><strong>Your Name:</strong> </p>';
-            echo '<p><strong>Booking Address:</strong> ' . $row["address"] . ', ' . $row["city"] . '.</p>';
+            echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
-            echo '<p><strong>Price Per Night:</strong> $' . $row["price"] . '</p>';
-            echo '<p><strong>Total Price:</strong> $' . $row["price"] * $discount . '.00' . $message . '</p>';
+            echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
+            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
 
-            //Allow the user to enter their payment information after confirming their booking details.
-            echo '<form method="POST" action="?page_id=30&id=' . $row["propertyID"] . '">'; 
+            // Allow the user to enter their payment information after confirming their booking details.
+            echo '<form method="POST" action="my-listings-plugin.php">';
             echo '<h3>Enter payment details:</h3>';
 
             echo '<label for="name">Full name on card:</label><br>';
@@ -293,10 +301,21 @@ function checkout_shortcode() {
 
             echo '<label for="cvv">CVV:</label><br>';
             echo '<input name="cvv" id="cvv" type="number" required><br>';
+            
+            echo '<input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">';
             echo '</form>';
 
             echo '<button><a href="?page_id=27&id=' . $row["propertyID"] . '">Go Back</a></button>';
-        }
+           
+            //Run an SQL query to create a booking that gets added to the database.                       
+            $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'issi', $id, $_POST["arrival"], $_POST["departure"], $total);
+            mysqli_stmt_execute($stmt);
+            
+        }                      
+    } else {
+        echo 'Something went wrong';
     }
 }
 add_shortcode('checkout', 'checkout_shortcode');
