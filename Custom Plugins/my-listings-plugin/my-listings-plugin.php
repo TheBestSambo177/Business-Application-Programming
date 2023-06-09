@@ -25,6 +25,8 @@
 
 //Allow the user to create and log into accounts
 function accounts_shortcode() {
+    include("includes/dbconnect.php");
+    
     //Create user account
     if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["register"])) {
         $firstName = $_POST["firstName"];
@@ -42,19 +44,16 @@ function accounts_shortcode() {
         if ($checkEmailQuery->num_rows > 0) {
             echo "Email already exists. Please use another one.";
         } else {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', '$hashedPassword', '$address', '$licenceNumber', '$photoIdentification')";
-            
-            if ($conn->query($sql) === TRUE) {
-                echo "User added added";
-            } else {
-                echo "An error occured";
-            }
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);            
+            $query = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values (?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'ssisssss', $firstName, $lastName, $phoneNumber, $email, $hashedPassword, $address, $licenceNumber, $photoIdentification);
+            mysqli_stmt_execute($stmt);
         }    
     }
 
     echo "<h1>Create User Account</h1>";
-    echo '<form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>';
+    echo '<form method="POST" action="my-listings-plugin.php"';
     echo '<label for="firstName">First Name:</label>';
     echo '<input type="text" name="firstName" id="firstName" required><br>';
 
@@ -81,8 +80,6 @@ function accounts_shortcode() {
 
     echo '<input type="submit" name="register" value="Register">';
     echo '</form>';
-    
-
 }
 
 //Allow the user to log into accounts
@@ -114,7 +111,7 @@ function accountSignIn_shortcode() {
     }
 
     echo '<h1>User Login</h1>';
-    echo '<form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>';
+    echo '<form method="POST" action="<$_SERVER["PHP_SELF"]; ?>';
         echo '<label for="email">Email:</label>';
         echo '<input type="email" name="email" id="email" required><br>';
 
