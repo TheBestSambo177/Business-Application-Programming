@@ -283,36 +283,38 @@ function checkout_shortcode() {
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
             echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
 
-            // Allow the user to enter their payment information after confirming their booking details.
-            echo '<form method="POST" action="my-listings-plugin.php">';
-            echo '<h3>Enter payment details:</h3>';
-
-            echo '<label for="name">Full name on card:</label><br>';
-            echo '<input name="name" id="name" type="text" required><br>';
-
-            echo '<label for="number">Card number:</label><br>';
-            echo '<input name="number" id="number" type="text" required><br>';
-
-            echo '<label for="date">Expiration:</label><br>';
-            echo '<input name="date" id="date" type="month" required><br>';
-
-            echo '<label for="cvv">CVV:</label><br>';
-            echo '<input name="cvv" id="cvv" type="number" required><br>';
-            
-            echo '<input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">';
-            echo '</form>';
-
-            echo '<button><a href="?page_id=27&id=' . $row["propertyID"] . '">Go Back</a></button>';
            
-            //Run an SQL query to create a booking that gets added to the database.                       
-            $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
-            $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'issi', $id, $_POST["arrival"], $_POST["departure"], $total);
-            mysqli_stmt_execute($stmt);
-            
+           
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                //Run an SQL query to create a booking that gets added to the database.                       
+                $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, 'issi', $id, $_POST["arrival"], $_POST["departure"], $total);
+                mysqli_stmt_execute($stmt);
+            }            
         }                      
     } else {
         echo 'Something went wrong';
     }
+
+    ?>
+        <form method="POST" action="my-listings-plugin.php">
+        <h3>Enter payment details:</h3>
+
+        <label for="name">Full name on card:</label><br>
+        <input name="name" id="name" type="text" required><br>
+
+        <label for="number">Card number:</label><br>
+        <input name="number" id="number" type="text" required><br>
+
+        <label for="date">Expiration:</label><br>
+        <input name="date" id="date" type="month" required><br>
+
+        <label for="cvv">CVV:</label><br>
+        <input name="cvv" id="cvv" type="number" required><br>
+        
+        <input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">
+        </form>
+    <?php
 }
 add_shortcode('checkout', 'checkout_shortcode');
