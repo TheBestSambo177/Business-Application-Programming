@@ -211,7 +211,7 @@ function property_booking_shortcode() {
             echo '<label for="departure">Departure:</label><br>';
             echo '<input name="departure" id="departure" type="date" min="' . $currentDate . '" required><br>';
             
-            echo '<button><a href="?page_id=30&id=' . $row["propertyID"] . '">Go Back</a></button>';
+            echo '<button><a href="?page_id=16&id=' . $row["propertyID"] . '">Go Back</a></button>';
             echo '<input type="submit" value="Proceed to Checkout" id="checkoutButton">';
         
             echo '</form>';
@@ -285,7 +285,7 @@ function checkout_shortcode() {
             echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
 
             // Allow the user to enter their payment information after confirming their booking details.
-            echo '<form method="POST" action="?page_id=47&id=' . $row["propertyID"] . '">'; 
+            echo '<form method="POST" action="?page_id=48&id=' . $row["propertyID"] . '">'; 
             echo '<h3>Enter payment details:</h3>';
             echo '<label for="cardName">Name:</label><br>';
             echo '<input name="cardName" id="cardNumber" type="text" required><br>';
