@@ -27,7 +27,8 @@ create table properties (
     price DECIMAL(13,2),
     city VARCHAR(50),
     specifications VARCHAR(200),
-    images VARCHAR(50)
+    images VARCHAR(50),
+    status VARCHAR(50)
 );
 
 create table bookings (
@@ -37,7 +38,6 @@ create table bookings (
     arrivalDate DATE,
     departureDate DATE,
     cost DECIMAL(13,2),
-    status VARCHAR(50),
     FOREIGN KEY (propertyID) REFERENCES properties(propertyID),
     FOREIGN KEY (userID) REFERENCES users(userID)
 );
