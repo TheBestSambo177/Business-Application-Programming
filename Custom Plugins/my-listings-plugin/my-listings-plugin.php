@@ -269,50 +269,87 @@ function checkout_shortcode() {
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
 
+            //Retrieve the information regarding the property, and calulate the price based on factors such as nights stayed and discounts applied.
             $id = $row["propertyID"];
             $address = $row["address"];
             $city = $row["city"];
             $price = $row["price"];
             $total = $price * $discount;
-
-
+            
+            //User confirmed details
             echo '<h3>Confirm your details:</h3>';
             echo '<p><strong>Your Name:</strong> </p>';
             echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
-            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';          
-           
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                //Run an SQL query to create a booking that gets added to the database.                       
-                $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
-                $stmt = mysqli_prepare($conn, $query);
-                mysqli_stmt_bind_param($stmt, 'issi', $id, $_POST["arrival"], $_POST["departure"], $total);
-                mysqli_stmt_execute($stmt);
-            }            
-        }                      
-    } else {
-        echo 'Something went wrong';
+            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
+
+            // Allow the user to enter their payment information after confirming their booking details.
+            echo '<form method="POST" action="?page_id=47&id=' . $row["propertyID"] . '">'; 
+            echo '<h3>Enter payment details:</h3>';
+            echo '<label for="cardName">Name:</label><br>';
+            echo '<input name="cardName" id="cardNumber" type="text" required><br>';
+            echo '<label for="number">Num:</label><br>';
+            echo '<input name="number" id="number" type="text" required><br>';
+            echo '<label for="date">Expiration:</label><br>';
+            echo '<input name="date" id="date" type="month" required><br>';
+            echo '<label for="cvv">CVV:</label><br>';
+            echo '<input name="cvv" id="cvv" type="number" required><br>';
+            echo '<input type="hidden" name="total" value="' . $total . '">';
+            echo '<input type="hidden" name="arrival" value="' . $_POST['arrival'] . '">';
+            echo '<input type="hidden" name="departure" value="' . $_POST['departure'] . '">';
+            echo '<input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">';
+            echo '</form>'; 
+            process_data($total);  
+        }                               
     }
-
-    ?>
-        <form method="POST" action="my-listings-plugin.php">
-        <h3>Enter payment details:</h3>
-
-        <label for="name">Full name on card:</label><br>
-        <input name="name" id="name" type="text" required><br>
-
-        <label for="number">Card number:</label><br>
-        <input name="number" id="number" type="text" required><br>
-
-        <label for="date">Expiration:</label><br>
-        <input name="date" id="date" type="month" required><br>
-
-        <label for="cvv">CVV:</label><br>
-        <input name="cvv" id="cvv" type="number" required><br>
-        
-        <input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">
-        </form>
-    <?php
 }
 add_shortcode('checkout', 'checkout_shortcode');
+
+//This function runs after the user has entered their payment details. Information regarding the booking is then added to the database.
+function process_data() {    
+    //Post to database
+    include('includes/dbconnect.php');
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if (isset($_POST['checkoutButton'])) {
+            $listingId = $_GET['id'];
+            $total = $_POST['total'];
+            $arrival = $_POST['arrival'];
+            $departure = $_POST['departure'];
+            //Run an SQL query to create a booking that gets added to the database.                       
+            $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
+            $stmt = mysqli_prepare($conn, $query);
+            mysqli_stmt_bind_param($stmt, 'issi', $listingId, $arrival, $departure, $total);
+            mysqli_stmt_execute($stmt);
+            echo 'Your booking has been created.';
+            echo '<script>window.location.href = "?page_id=8";</script>';
+        }         
+    }
+}
+add_shortcode('process', 'process_data');
+
+function display_bookings() {
+    ob_start();
+    include(plugin_dir_path(__FILE__) . 'includes/dbconnect.php');
+    
+    //Get both bookings and properties from the database so they can be displayed alongside each other.
+    $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID;";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {   
+            echo '<div class="listing">';
+            echo '<h2>' . $row["address"] . '</h2>';
+            echo '<p>' . 'Located in ' . $row["city"] . '</p>';
+            echo '<p>' . '$' . $row["price"] . ' per night.' .'</p>';
+            echo '<button class="button"><a href="' . esc_url(add_query_arg('id', $row["propertyID"], '?page_id=16')) . '">View Property</a></button>';
+            echo '</div>';
+        }
+    } else {
+        echo "No listings found";
+    }
+
+    $output = ob_get_clean();
+    return $output;
+}
+add_shortcode('all_bookings', 'display_bookings');
