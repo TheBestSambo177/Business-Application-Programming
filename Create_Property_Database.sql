@@ -15,7 +15,7 @@ create table users (
     lastName VARCHAR(50),
     phoneNumber VARCHAR(50) UNIQUE,
     email VARCHAR(50) UNIQUE,
-    password VARCHAR(50),
+    password VARCHAR(255),
     address VARCHAR(50) UNIQUE,
     licenceNumber VARCHAR(50),
     photoIdentification VARCHAR(50)
