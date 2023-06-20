@@ -1,20 +1,3 @@
-<style>
-    .listing {
-    margin: 2%;
-    border-style: solid;
-    display: inline-grid;
-    width: 25%;
-    text-align: center;
-    }
-
-    img {
-    height: 50px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    }
-</style>
-
 <?php
 /**
  * Plugin Name: Haukainga HomeWinds Booking Plugin
@@ -134,29 +117,67 @@ add_shortcode('signIn', 'accountSignIn_shortcode');
 
 //Display all property listings.
 function my_listings_plugin_shortcode() {
+    ?>
+ 
+    <!-- Small bit of styling in CSS to display the properties nicer. -->
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            align-items: center;
+            text-align: center;
+        }
+        
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        
+        .property_image {
+            width: 100px;   
+        }
+        
+        .property_address {
+            width: 50%;
+        }
+        
+        .property_button {
+            width: 100px;
+        }
+    </style>
+ 
+    <?php
     ob_start();
     include(plugin_dir_path(__FILE__) . 'includes/dbconnect.php');
-    
+     
     $sql = "SELECT * FROM properties";
     $result = $conn->query($sql);
-
+ 
+    //Display all relevant information, including the image, address, and a button to view the property for each listing.
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
-            echo '<div class="listing">';
+            echo '<table>';
+            echo '<tr>';
+            echo '<td class="property_image">';
             echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row["images"], __FILE__) . '" alt="Image of the property.">';
+            echo '</td>';
+            echo '<td class="property_address">';
             echo '<h2>' . $row["address"] . '</h2>';
-            echo '<p>' . 'Located in ' . $row["city"] . '</p>';
-            echo '<p>' . '$' . $row["price"] . ' per night.' .'</p>';
+            echo '<p>' . $row["city"] . '</p>';
+            echo '</td>';
+            echo '<td class="property_button">';
             echo '<button class="button"><a href="' . esc_url(add_query_arg('id', $row["propertyID"], '?page_id=16')) . '">View Property</a></button>';
-            echo '</div>';
+            echo '</td>';   
+            echo '</tr>';   
+            echo '</table>';
         }
     } else {
         echo "No listings found";
     }
-
+ 
     $output = ob_get_clean();
     return $output;
-}
+ }
 add_shortcode('my_listings', 'my_listings_plugin_shortcode');
 
 //Open a listing to show more information regarding it.
