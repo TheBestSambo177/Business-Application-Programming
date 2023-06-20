@@ -93,9 +93,15 @@ function accountSignIn_shortcode() {
         $getUserQuery = "SELECT * FROM users WHERE email = '$email'";
         $getUserResult = $conn->query($getUserQuery);
 
+        //If user does not exist return error
+        if ($getUserResult->num_rows == 0) {
+            echo"User does not exist";
+        }
+
+        // Check if the user exists
         if ($getUserResult->num_rows == 1) {
-            $user = $getUserResult->fetch_assoc();
-            $hashedPassword = $user["password"];
+            $row = mysqli_fetch_assoc($getUserResult);
+		    $hashedPassword = $row['password'];
 
             // Verify the password
             if (password_verify($password, $hashedPassword)) {
@@ -105,9 +111,7 @@ function accountSignIn_shortcode() {
             } else {
                 echo "Invalid email or password.";
             }
-        } else {
-            echo "Invalid email or password.";
-        }
+        } 
     }
 
     echo '<h1>User Login</h1>';
