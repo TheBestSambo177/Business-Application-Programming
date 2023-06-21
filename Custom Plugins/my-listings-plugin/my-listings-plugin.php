@@ -32,10 +32,13 @@ function accounts_shortcode() {
             echo "Email already exists. Please use another one.";
         } else {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);            
-            $query = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'ssisssss', $firstName, $lastName, $phoneNumber, $email, $hashedPassword, $address, $licenceNumber, $photoIdentification);
-            mysqli_stmt_execute($stmt);
+            $sql = "Insert into users (firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification) Values ('$firstName', '$lastName', '$phoneNumber', '$email', '$hashedPassword', '$address', '$licenceNumber', '$photoIdentification')";
+            
+            if ($conn->query($sql) === TRUE) {
+                echo "User added added";
+            } else {
+                echo "An error occured";
+            }
         }    
     }
 
