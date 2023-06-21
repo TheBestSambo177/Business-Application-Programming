@@ -73,7 +73,7 @@ function accounts_shortcode() {
 function accountSignIn_shortcode() {
     //Login users
     include('includes/dbconnect.php');
-    
+
 	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
         $email = $_POST["email"];
         $password = $_POST["password"];
@@ -104,13 +104,14 @@ function accountSignIn_shortcode() {
     }
 
     echo '<h1>User Login</h1>';
-    echo '<form method="POST" action="<$_SERVER["PHP_SELF"]; ?>';
+    echo '<form method="post">';
         echo '<label for="email">Email:</label>';
         echo '<input type="email" name="email" id="email" required><br>';
 
         echo '<label for="password">Password:</label>';
         echo '<input type="password" name="password" id="password" required><br>';
 
+        
         echo '<input type="submit" name="login" value="Login">';
     echo '</form>';
 }
