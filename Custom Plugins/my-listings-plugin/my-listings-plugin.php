@@ -6,6 +6,10 @@
  * Author: Javarn Tromp de Haas & Samuel Kennedy
 */
 
+?>
+    <link rel="stylesheet" type="text/css" href="<?php echo plugins_url('my-listings-plugin/includes/style.css'); ?>">   
+<?php
+
 //Allow the user to create and log into accounts
 function accounts_shortcode() {
     include("includes/dbconnect.php");
@@ -115,48 +119,35 @@ add_shortcode('createUser', 'accounts_shortcode');
 add_shortcode('signIn', 'accountSignIn_shortcode');
 
 
-//Display all property listings.
-function my_listings_plugin_shortcode() {
-    ?>
- 
-    <!-- Small bit of styling in CSS to display the properties nicer. -->
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            align-items: center;
-            text-align: center;
-        }
-        
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        
-        .property_image {
-            width: 100px;   
-        }
-        
-        .property_address {
-            width: 50%;
-        }
-        
-        .property_button {
-            width: 100px;
-        }
-    </style>
- 
-    <?php
+// Display all property listings.
+function my_listings_plugin_shortcode()
+{
     ob_start();
     include(plugin_dir_path(__FILE__) . 'includes/dbconnect.php');
-     
-    $sql = "SELECT * FROM properties";
+
+    // Handle search query
+    $searchBar = isset($_GET['search']) ? $_GET['search'] : '';
+
+    $sql = "SELECT * FROM properties where booked = 0";
+
+    // Add WHERE clause to filter results based on search query
+    if (!empty($searchBar)) {
+        $searchBar = mysqli_real_escape_string($conn, $searchBar);
+        $sql .= " WHERE city LIKE '%$searchBar%'";
+    }
+
     $result = $conn->query($sql);
- 
-    //Display all relevant information, including the image, address, and a button to view the property for each listing.
+
+    // Create a search bar for the user to enter input.
+    echo '<input type="text" id="search-input" class="search-input" style="border:black;" name="search" placeholder="Search by city" value="';
+    htmlspecialchars($searchBar); 
+    echo '">';
+    
+    // Display all relevant information, including the image, address, and a button to view the property for each listing.
     if ($result->num_rows > 0) {
+        echo '<div id="property-listings">';
         while ($row = $result->fetch_assoc()) {
-            echo '<table>';
+            echo '<table class="property-listing">';
             echo '<tr>';
             echo '<td class="property_image">';
             echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row["images"], __FILE__) . '" alt="Image of the property.">';
@@ -167,17 +158,39 @@ function my_listings_plugin_shortcode() {
             echo '</td>';
             echo '<td class="property_button">';
             echo '<button class="button"><a href="' . esc_url(add_query_arg('id', $row["propertyID"], '?page_id=16')) . '">View Property</a></button>';
-            echo '</td>';   
-            echo '</tr>';   
+            echo '</td>';
+            echo '</tr>';
             echo '</table>';
         }
+        echo '</div>';
     } else {
         echo "No listings found";
     }
- 
+    ?>
+
+    <!-- Hide records that do not match the search result -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#search-input').on('input', function() {
+                var searchValue = $(this).val().toLowerCase();
+                $('.property-listing').each(function() {
+                    var city = $(this).find('.property_address p').text().toLowerCase();
+                    if (city.indexOf(searchValue) === -1) {
+                        $(this).hide();
+                    } else {
+                        $(this).show();
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <?php
+
     $output = ob_get_clean();
     return $output;
- }
+}
 add_shortcode('my_listings', 'my_listings_plugin_shortcode');
 
 //Open a listing to show more information regarding it.
@@ -359,17 +372,50 @@ function display_bookings() {
     
     //Get both bookings and properties from the database so they can be displayed alongside each other.
     $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID;";
+
+    if (isset($_POST['cancel_booking'])) {
+        $bookingID = $_POST['bookingID'];
+        $propertyID = $_POST['propertyID'];
+
+        //Make a property available again when the user cancels a booking.
+        $replaceQuery = "UPDATE properties set booked = 0 where propertyID = '$propertyID'";
+        mysqli_query($conn, $replaceQuery);
+
+        // Cancel a booking when the user clicks the button.
+        $deleteQuery = "DELETE FROM bookings WHERE bookingID = '$bookingID'";
+        mysqli_query($conn, $deleteQuery);
+    }
+
     $result = $conn->query($sql);
 
+    // Display all relevant information, including the image, address, and a button to view the property for each listing.
     if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {   
-            echo '<div class="listing">';
-            echo '<h2>' . $row["address"] . '</h2>';
-            echo '<p>' . 'Located in ' . $row["city"] . '</p>';
-            echo '<p>' . '$' . $row["price"] . ' per night.' .'</p>';
-            echo '<button class="button"><a href="' . esc_url(add_query_arg('id', $row["propertyID"], '?page_id=16')) . '">View Property</a></button>';
-            echo '</div>';
+        echo '<div id="property-listings">';
+        while ($row = $result->fetch_assoc()) {
+            //Format the date to dd/mm/yyyy for consistency.
+            $arrival = date('d/m/Y', strtotime($row['arrivalDate']));
+            $departure = date('d/m/Y', strtotime($row['departureDate']));
+
+            echo '<table class="property-listing">';
+            echo '<tr>';
+            echo '<td class="property_image">';
+            echo '<img class="hello" src="' . plugins_url('../Property_Management/images/' . $row["images"], __FILE__) . '" alt="Image of the property.">';
+            echo '</td>';
+            echo '<td class="property_address">';
+            echo '<h2>' . $row["address"] . ', ' . $row["city"] .'</h2>';
+            echo '<p>' . $arrival . ' to ' . $departure .'</p>';
+            echo '</td>';
+            echo '<td class="property_button">';
+            echo '<form method="post">
+                <input type="hidden" name="bookingID" value="' .$row["bookingID"]. '">
+                <input type="hidden" name="propertyID" value="' .$row["propertyID"]. '">
+                <input type="submit" name="cancel_booking" value="Cancel Booking">
+            </form>';
+            echo '</td>';
+            echo '</tr>';
+            echo '</table>';
         }
+        echo '</div>';
     } else {
         echo "No listings found";
     }
