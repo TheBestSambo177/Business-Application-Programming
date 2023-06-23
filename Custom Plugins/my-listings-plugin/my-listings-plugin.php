@@ -48,7 +48,7 @@ function accounts_shortcode() {
     }
 
     echo "<h1>Create User Account</h1>";
-    echo '<form method="POST" action="my-listings-plugin.php"';
+    echo '<form method="post"';
     echo '<label for="firstName">First Name:</label>';
     echo '<input type="text" name="firstName" id="firstName" required><br>';
 
