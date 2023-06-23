@@ -14,7 +14,6 @@ if (!session_id()) {
     session_start();
 }
 
-
 //Allow the user to create and log into accounts
 function accounts_shortcode() {
     include("includes/dbconnect.php");
@@ -83,20 +82,7 @@ function accountSignIn_shortcode() {
     //Login users
     include('includes/dbconnect.php');
 
-    if (empty($_SESSION['userID'])) {
-		//Says no user is logged in 
-		echo "No user currently logged in";
-	} else {
-		$userID_Session = $_SESSION['userID'];
-		echo "UserID: ";
-		echo $userID_Session;
-		echo "<br>";
-	}
-
-    //Use for log out
-	//unset($_SESSION['userID']);
-
-	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
+    if (isset($_POST['login'])) {
         $email = $_POST["email"];
         $password = $_POST["password"];
 
@@ -106,7 +92,7 @@ function accountSignIn_shortcode() {
 
         //If user does not exist return error
         if ($getUserResult->num_rows == 0) {
-            echo"User does not exist";
+            echo "User does not exist";
         }
 
         // Check if the user exists
@@ -118,9 +104,7 @@ function accountSignIn_shortcode() {
             if (password_verify($password, $hashedPassword)) {
                 // Password is correct, start a new session
                 $_SESSION["email"] = $email;
-                echo "Logged in successfully.";
-                echo "<br>";
-
+                
                 $userIDInfo = "SELECT userID, firstName, lastName FROM users WHERE email = '$email'";
 				
 				$userIdResult = $conn->query($userIDInfo);
@@ -128,8 +112,6 @@ function accountSignIn_shortcode() {
                 if ($userIdResult->num_rows > 0) {
 					// Output data of each row
 					while ($row = $userIdResult->fetch_assoc()) {
-						echo $row["firstName"] . " ". $row["lastName"] . " User ID: " . $row["userID"] .  "<br>";
-
                         $userID = $row["userID"];
 
                         //SESSIONS
@@ -143,46 +125,40 @@ function accountSignIn_shortcode() {
         } 
     }
 
+    if (isset($_SESSION['userID'])) {
+        $sql = 'select * from users where userID = ' . $_SESSION['userID'] . ';';
+        $r = $conn->query($sql);
+        if ($r->num_rows > 0) {
+            $row = $r->fetch_assoc();
+            $firstName = $row['firstName'];
+            $lastName = $row['lastName'];
+        }    
+        echo "Welcome back, " . $firstName . " " . $lastName . ".";
+        echo '<form method="POST" method="">';
+        echo '<input type="submit" name="logout" value="Logout">';
+        echo '</form>';
+    }
+
+    if (isset($_POST["logout"])) {
+        unset($_SESSION['userID']);
+        echo '<p>You have been logged out.</p>';
+    }
+
     echo '<h1>User Login</h1>';
     echo '<form method="post">';
-        echo '<label for="email">Email:</label>';
-        echo '<input type="email" name="email" id="email" required><br>';
+    echo '<label for="email">Email:</label>';
+    echo '<input type="email" name="email" id="email" required><br>';
 
-        echo '<label for="password">Password:</label>';
-        echo '<input type="password" name="password" id="password" required><br>';
-
-        
-        echo '<input type="submit" name="login" value="Login">';
+    echo '<label for="password">Password:</label>';
+    echo '<input type="password" name="password" id="password" required><br>';
+    
+    echo '<input type="submit" name="login" value="Login">';
     echo '</form>';
-}
-
-//Function to log out
-function accountLogOut_shortcode(){
-	ob_start();
-	
-	include('includes/dbconnect.php');
-	
-	if (isset($_POST["LogOut"])) {
-		if (empty($_SESSION['userID'])) {
-			//Says no user is logged in 
-			echo "No user currently logged in";
-		} else {
-			unset($_SESSION['userID']);
-			echo "You have been Logged out";
-		}
-	}
-	
-	//Button to log users out
-	echo '<h1>User Log Out</h1>';
-	echo '<form method="post">';
-		echo '<input type="submit" name="LogOut" value="LogOut">';
-	echo '</form>';
 }
 
 //Users shortcode
 add_shortcode('createUser', 'accounts_shortcode');
 add_shortcode('signIn', 'accountSignIn_shortcode');
-add_shortcode('logOut', 'accountLogOut_shortcode');
 
 
 // Display all property listings.
@@ -500,7 +476,8 @@ function display_bookings() {
     echo '<h2>My Bookings</h2>';
 
     //Get both bookings and properties from the database so they can be displayed alongside each other.
-    $userID = $_SESSION['userID'];
+    if (isset($_SESSION['userID'])) {
+        $userID = $_SESSION['userID'];
     $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID and userID = $userID";
 
     if (isset($_POST['cancel_booking'])) {
@@ -552,5 +529,9 @@ function display_bookings() {
 
     $output = ob_get_clean();
     return $output;
+    } else {
+        echo '<p>You must be logged in to view your bookings.</p>';
+    }
+    
 }
 add_shortcode('all_bookings', 'display_bookings');
