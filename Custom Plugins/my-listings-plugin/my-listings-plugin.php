@@ -156,10 +156,33 @@ function accountSignIn_shortcode() {
     echo '</form>';
 }
 
+//Function to log out
+function accountLogOut_shortcode(){
+	ob_start();
+	
+	include('includes/dbconnect.php');
+	
+	if (isset($_POST["LogOut"])) {
+		if (empty($_SESSION['userID'])) {
+			//Says no user is logged in 
+			echo "No user currently logged in";
+		} else {
+			unset($_SESSION['userID']);
+			echo "You have been Logged out";
+		}
+	}
+	
+	//Button to log users out
+	echo '<h1>User Log Out</h1>';
+	echo '<form method="post">';
+		echo '<input type="submit" name="LogOut" value="LogOut">';
+	echo '</form>';
+}
 
 //Users shortcode
 add_shortcode('createUser', 'accounts_shortcode');
 add_shortcode('signIn', 'accountSignIn_shortcode');
+add_shortcode('logOut', 'accountLogOut_shortcode');
 
 
 // Display all property listings.
