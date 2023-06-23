@@ -263,7 +263,6 @@ function property_listing_shortcode() {
     } else {
         echo "Listing not found.";
     }
-
     return ob_get_clean();
 }
 add_shortcode('property_listing', 'property_listing_shortcode');
