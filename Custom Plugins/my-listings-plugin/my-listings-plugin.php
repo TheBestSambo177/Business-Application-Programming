@@ -10,6 +10,11 @@
     <link rel="stylesheet" type="text/css" href="<?php echo plugins_url('my-listings-plugin/includes/style.css'); ?>">   
 <?php
 
+if (!session_id()) {
+    session_start();
+}
+
+
 //Allow the user to create and log into accounts
 function accounts_shortcode() {
     include("includes/dbconnect.php");
@@ -74,8 +79,22 @@ function accounts_shortcode() {
 
 //Allow the user to log into accounts
 function accountSignIn_shortcode() {
+    ob_start();
     //Login users
     include('includes/dbconnect.php');
+
+    if (empty($_SESSION['userID'])) {
+		//Says no user is logged in 
+		echo "No user currently logged in";
+	} else {
+		$userID_Session = $_SESSION['userID'];
+		echo "UserID: ";
+		echo $userID_Session;
+		echo "<br>";
+	}
+
+    //Use for log out
+	//unset($_SESSION['userID']);
 
 	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
         $email = $_POST["email"];
@@ -110,6 +129,12 @@ function accountSignIn_shortcode() {
 					// Output data of each row
 					while ($row = $userIdResult->fetch_assoc()) {
 						echo $row["firstName"] . " ". $row["lastName"] . " User ID: " . $row["userID"] .  "<br>";
+
+                        $userID = $row["userID"];
+
+                        //SESSIONS
+						$_SESSION['userID']= $userID;
+						$userID_Session = $_SESSION['userID'];
                     }
                 }
             } else {
