@@ -146,7 +146,7 @@ function my_listings_plugin_shortcode()
     // Handle search query
     $searchBar = isset($_GET['search']) ? $_GET['search'] : '';
 
-    $sql = "SELECT * FROM properties where booked = 0";
+    $sql = "SELECT * FROM properties";
 
     // Add WHERE clause to filter results based on search query
     if (!empty($searchBar)) {
@@ -211,10 +211,10 @@ function my_listings_plugin_shortcode()
 }
 add_shortcode('my_listings', 'my_listings_plugin_shortcode');
 
+
 //Open a listing to show more information regarding it.
 function property_listing_shortcode() {
     ob_start();
-
     include('includes/dbconnect.php');
 
     if (isset($_GET['id'])) {
@@ -258,19 +258,52 @@ function property_booking_shortcode() {
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            echo '<form method="POST" action="?page_id=30&id=' . $row["propertyID"] . '">'; 
+            echo '<form method="POST" action="">'; 
             echo '<h2>You are about to book ' . $row["address"] . ', ' . $row["city"] . '</h2>';
             
+            echo '<input type="hidden" name="propertyID" value="' . $row["propertyID"] . '">';
+
             echo '<label for="arrival">Arrival:</label><br>';
             echo '<input name="arrival" id="arrival" type="date" min="' . $currentDate . '" required><br>';
 
             echo '<label for="departure">Departure:</label><br>';
-            echo '<input name="departure" id="departure" type="date" min="' . $currentDate . '" required><br>';
+            echo '<input name="departure" id="departure" type="date" min="' . $currentDate  . '" required><br>';
             
             echo '<button><a href="?page_id=16&id=' . $row["propertyID"] . '">Go Back</a></button>';
-            echo '<input type="submit" value="Proceed to Checkout" id="checkoutButton">';
+            echo '<input type="submit" value="Proceed to Checkout" name="checkoutButton" id="checkoutButton">';
         
             echo '</form>';
+
+            //Display the dates that have already been booked.
+            $query = "SELECT arrivalDate, departureDate FROM bookings WHERE propertyID = '$listingId'";
+            $r = $conn->query($query);
+            if ($r->num_rows > 0) {
+                echo '<h3>Booked Dates:</h3>';
+                while ($row = $r->fetch_assoc()) {
+                    $arrival = date('d/m/Y', strtotime($row['arrivalDate']));
+                    $departure = date('d/m/Y', strtotime($row['departureDate']));
+                    echo '<p>' . $arrival . ' to ' . $departure . '</p>';
+                }
+            }
+
+
+
+            // Check if the user has selected dates that are available.
+            if (isset($_POST['checkoutButton'])) {
+                $arrival = $_POST['arrival'];
+                $departure = $_POST['departure'];
+
+                availability($arrival, $departure, $listingId);
+                if (availability($arrival, $departure, $listingId) == false) {
+                    echo '<script>alert("Sorry, the dates you have selected are not available.");</script>';
+                } else {
+                    echo '<form method="POST" id="postDate" action="?page_id=30&id=' . $row["propertyID"] . '">'; 
+                    echo '<input type="hidden" name="arrival" value="' . $arrival . '">';
+                    echo '<input type="hidden" name="departure" value="' . $departure . '">';
+                    echo '</form>';
+                    echo '<script>document.getElementById("postDate").submit();</script>';
+                }
+            }
 
             // Validate that the departure date is later than the arrival date using Javascript. Also ensure that the date being displayed is in the correct format.
             echo '<script>
@@ -290,6 +323,18 @@ function property_booking_shortcode() {
     }
 }
 add_shortcode('property_booking', 'property_booking_shortcode');
+
+function availability($arrival, $departure, $propertyID) {
+    include('includes/dbconnect.php');
+    $query = "SELECT bookingID FROM bookings WHERE propertyID = '$propertyID' AND (arrivalDate <= '$departure' AND departureDate >= '$arrival')";
+    $r = $conn->query($query);
+
+    if ($r->num_rows > 0) {
+        return false; 
+    } else {
+        return true; 
+    }
+}
 
 //Checkout, where the booking is finalized and added to the database.
 function checkout_shortcode() {
@@ -338,7 +383,7 @@ function checkout_shortcode() {
             echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
-            echo '<p><strong>Total Price:</strong> $' . $total . '.00' . $message . '</p>';
+            echo '<p><strong>Total Price:</strong> $' . $total . '' . $message . '</p>';
 
             // Allow the user to enter their payment information after confirming their booking details.
             echo '<form method="POST" action="?page_id=48&id=' . $row["propertyID"] . '">'; 
@@ -377,6 +422,7 @@ function process_data() {
             $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, 'issi', $listingId, $arrival, $departure, $total);
             mysqli_stmt_execute($stmt);
+           
             echo 'Your booking has been created.';
             echo '<script>window.location.href = "?page_id=8";</script>';
         }         
