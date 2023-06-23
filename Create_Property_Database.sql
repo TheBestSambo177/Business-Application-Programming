@@ -94,8 +94,8 @@ create table discounts (
 
 /* Records for testing */
 Insert into users (userID, firstName, lastName, phoneNumber, email, password, address, licenceNumber, photoIdentification)
-Values (1, 'Jimmy', 'Novak', '0215722745', 'continental@gmail.com', 'password', '132 Pine Street', 'WO3425627H234', 'images/licences'),
-(2, 'Bobby', 'Singer', '0214279134', 'singerauto@gmail.com', 'betterpassword', '2194 Kripke Lane', 'FE4729F81S383', 'images/licences');
+Values (1, 'Jimmy', 'Novak', '0215722745', 'continental@gmail.com', SHA1('Jimmy20'), '132 Pine Street', 'WO3425627H234', 'images/licences'),
+(2, 'Bobby', 'Singer', '0214279134', 'singerauto@gmail.com', SHA1('Bob3021'), '2194 Kripke Lane', 'FE4729F81S383', 'images/licences');
 
 Insert into properties (propertyID, address, price, city, specifications, images, booked)
 Values (1, '308 Negra Arroyo Lane', '129.99', 'Auckland', 'Nice location', 'example1.png', 0),
