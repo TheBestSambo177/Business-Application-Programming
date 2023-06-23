@@ -100,6 +100,18 @@ function accountSignIn_shortcode() {
                 // Password is correct, start a new session
                 $_SESSION["email"] = $email;
                 echo "Logged in successfully.";
+                echo "<br>";
+
+                $userIDInfo = "SELECT userID, firstName, lastName FROM users WHERE email = '$email'";
+				
+				$userIdResult = $conn->query($userIDInfo);
+
+                if ($userIdResult->num_rows > 0) {
+					// Output data of each row
+					while ($row = $userIdResult->fetch_assoc()) {
+						echo $row["firstName"] . " ". $row["lastName"] . " User ID: " . $row["userID"] .  "<br>";
+                    }
+                }
             } else {
                 echo "Invalid email or password.";
             }
