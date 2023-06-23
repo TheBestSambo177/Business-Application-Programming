@@ -279,13 +279,20 @@ function property_listing_shortcode() {
             echo '<p>' . 'Located in ' . $row->city . '</p>';
             echo '<p>' . '$' . $row->price . ' per night.' .'</p>';
             echo '<button><a href="' . get_permalink(8) . '">Go back</a></button>';
-            echo '<button><a href="' . get_permalink(27) . '&id=' . $row->propertyID . '">Book this Property</a></button>';
+            
+            //If the user is logged in, allow them to book the property. Otherwise, prompt them to log in.
+            if (isset($_SESSION['userID'])) {
+                echo '<button><a href="' . get_permalink(27) . '&id=' . $row->propertyID . '">Book this Property</a></button>';
+            } else {
+                echo '<button><a href="' . get_permalink(41) . '">Book this Property</a></button>';
+            }         
         } else {
             echo "Listing not found.";
         }
     } else {
         echo "Listing not found.";
     }
+
     return ob_get_clean();
 }
 add_shortcode('property_listing', 'property_listing_shortcode');
@@ -332,8 +339,6 @@ function property_booking_shortcode() {
                     echo '<p>' . $arrival . ' to ' . $departure . '</p>';
                 }
             }
-
-
 
             // Check if the user has selected dates that are available.
             if (isset($_POST['checkoutButton'])) {
@@ -402,7 +407,7 @@ function checkout_shortcode() {
         $date1 = new DateTime($_POST['arrival']);
         $date2 = new DateTime($_POST['departure']);
         $interval = $date1->diff($date2);
-        $days = $interval->days;   
+        $days = $interval->days;
 
         // If the user books at least 4 days, one of them is free.
         if ($days > 3) {
@@ -424,16 +429,27 @@ function checkout_shortcode() {
             $price = $row["price"];
             $total = $price * $discount;
             
+            if (isset($_SESSION['userID'])) {
+                $sql = 'select firstName, lastName from users where userID = ' . $_SESSION['userID'] . ';';
+                $r = $conn->query($sql);
+
+                if ($r->num_rows > 0) {
+                    $row = $r->fetch_assoc();
+                    $firstName = $row['firstName'];
+                    $lastName = $row['lastName'];
+                }
+            }
+
             //User confirmed details
             echo '<h3>Confirm your details:</h3>';
-            echo '<p><strong>Your Name:</strong> </p>';
+            echo '<p><strong>Your Name: </strong>' . $firstName . ' ' . $lastName . '</p>';
             echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
             echo '<p><strong>Total Price:</strong> $' . $total . '' . $message . '</p>';
 
             // Allow the user to enter their payment information after confirming their booking details.
-            echo '<form method="POST" action="?page_id=48&id=' . $row["propertyID"] . '">'; 
+            echo '<form method="POST" action="?page_id=48&id=' . $listingId . '">'; 
             echo '<h3>Enter payment details:</h3>';
             echo '<label for="cardName">Name:</label><br>';
             echo '<input name="cardName" id="cardNumber" type="text" required><br>';
@@ -465,9 +481,9 @@ function process_data() {
             $arrival = $_POST['arrival'];
             $departure = $_POST['departure'];
             //Run an SQL query to create a booking that gets added to the database.                       
-            $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
+            $query = 'insert into bookings (propertyID, userID, arrivalDate, departureDate, cost) values (?, ?, ?, ?, ?)';
             $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'issi', $listingId, $arrival, $departure, $total);
+            mysqli_stmt_bind_param($stmt, 'iissi', $listingId, $_SESSION['userID'], $arrival, $departure, $total);
             mysqli_stmt_execute($stmt);
            
             echo 'Your booking has been created.';
@@ -481,8 +497,11 @@ function display_bookings() {
     ob_start();
     include(plugin_dir_path(__FILE__) . 'includes/dbconnect.php');
     
+    echo '<h2>My Bookings</h2>';
+
     //Get both bookings and properties from the database so they can be displayed alongside each other.
-    $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID;";
+    $userID = $_SESSION['userID'];
+    $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID and userID = $userID";
 
     if (isset($_POST['cancel_booking'])) {
         $bookingID = $_POST['bookingID'];
