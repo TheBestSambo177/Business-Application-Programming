@@ -14,7 +14,6 @@ if (!session_id()) {
     session_start();
 }
 
-
 //Allow the user to create and log into accounts
 function accounts_shortcode() {
     include("includes/dbconnect.php");
@@ -83,20 +82,7 @@ function accountSignIn_shortcode() {
     //Login users
     include('includes/dbconnect.php');
 
-    if (empty($_SESSION['userID'])) {
-		//Says no user is logged in 
-		echo "No user currently logged in";
-	} else {
-		$userID_Session = $_SESSION['userID'];
-		echo "UserID: ";
-		echo $userID_Session;
-		echo "<br>";
-	}
-
-    //Use for log out
-	//unset($_SESSION['userID']);
-
-	if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login"])) {
+    if (isset($_POST['login'])) {
         $email = $_POST["email"];
         $password = $_POST["password"];
 
@@ -106,7 +92,7 @@ function accountSignIn_shortcode() {
 
         //If user does not exist return error
         if ($getUserResult->num_rows == 0) {
-            echo"User does not exist";
+            echo "User does not exist";
         }
 
         // Check if the user exists
@@ -118,9 +104,7 @@ function accountSignIn_shortcode() {
             if (password_verify($password, $hashedPassword)) {
                 // Password is correct, start a new session
                 $_SESSION["email"] = $email;
-                echo "Logged in successfully.";
-                echo "<br>";
-
+                
                 $userIDInfo = "SELECT userID, firstName, lastName FROM users WHERE email = '$email'";
 				
 				$userIdResult = $conn->query($userIDInfo);
@@ -128,8 +112,6 @@ function accountSignIn_shortcode() {
                 if ($userIdResult->num_rows > 0) {
 					// Output data of each row
 					while ($row = $userIdResult->fetch_assoc()) {
-						echo $row["firstName"] . " ". $row["lastName"] . " User ID: " . $row["userID"] .  "<br>";
-
                         $userID = $row["userID"];
 
                         //SESSIONS
@@ -143,46 +125,40 @@ function accountSignIn_shortcode() {
         } 
     }
 
+    if (isset($_SESSION['userID'])) {
+        $sql = 'select * from users where userID = ' . $_SESSION['userID'] . ';';
+        $r = $conn->query($sql);
+        if ($r->num_rows > 0) {
+            $row = $r->fetch_assoc();
+            $firstName = $row['firstName'];
+            $lastName = $row['lastName'];
+        }    
+        echo "Welcome back, " . $firstName . " " . $lastName . ".";
+        echo '<form method="POST" method="">';
+        echo '<input type="submit" name="logout" value="Logout">';
+        echo '</form>';
+    }
+
+    if (isset($_POST["logout"])) {
+        unset($_SESSION['userID']);
+        echo '<p>You have been logged out.</p>';
+    }
+
     echo '<h1>User Login</h1>';
     echo '<form method="post">';
-        echo '<label for="email">Email:</label>';
-        echo '<input type="email" name="email" id="email" required><br>';
+    echo '<label for="email">Email:</label>';
+    echo '<input type="email" name="email" id="email" required><br>';
 
-        echo '<label for="password">Password:</label>';
-        echo '<input type="password" name="password" id="password" required><br>';
-
-        
-        echo '<input type="submit" name="login" value="Login">';
+    echo '<label for="password">Password:</label>';
+    echo '<input type="password" name="password" id="password" required><br>';
+    
+    echo '<input type="submit" name="login" value="Login">';
     echo '</form>';
-}
-
-//Function to log out
-function accountLogOut_shortcode(){
-	ob_start();
-	
-	include('includes/dbconnect.php');
-	
-	if (isset($_POST["LogOut"])) {
-		if (empty($_SESSION['userID'])) {
-			//Says no user is logged in 
-			echo "No user currently logged in";
-		} else {
-			unset($_SESSION['userID']);
-			echo "You have been Logged out";
-		}
-	}
-	
-	//Button to log users out
-	echo '<h1>User Log Out</h1>';
-	echo '<form method="post">';
-		echo '<input type="submit" name="LogOut" value="LogOut">';
-	echo '</form>';
 }
 
 //Users shortcode
 add_shortcode('createUser', 'accounts_shortcode');
 add_shortcode('signIn', 'accountSignIn_shortcode');
-add_shortcode('logOut', 'accountLogOut_shortcode');
 
 
 // Display all property listings.
@@ -279,7 +255,13 @@ function property_listing_shortcode() {
             echo '<p>' . 'Located in ' . $row->city . '</p>';
             echo '<p>' . '$' . $row->price . ' per night.' .'</p>';
             echo '<button><a href="' . get_permalink(8) . '">Go back</a></button>';
-            echo '<button><a href="' . get_permalink(27) . '&id=' . $row->propertyID . '">Book this Property</a></button>';
+            
+            //If the user is logged in, allow them to book the property. Otherwise, prompt them to log in.
+            if (isset($_SESSION['userID'])) {
+                echo '<button><a href="' . get_permalink(27) . '&id=' . $row->propertyID . '">Book this Property</a></button>';
+            } else {
+                echo '<button><a href="' . get_permalink(41) . '">Book this Property</a></button>';
+            }         
         } else {
             echo "Listing not found.";
         }
@@ -333,8 +315,6 @@ function property_booking_shortcode() {
                     echo '<p>' . $arrival . ' to ' . $departure . '</p>';
                 }
             }
-
-
 
             // Check if the user has selected dates that are available.
             if (isset($_POST['checkoutButton'])) {
@@ -403,7 +383,7 @@ function checkout_shortcode() {
         $date1 = new DateTime($_POST['arrival']);
         $date2 = new DateTime($_POST['departure']);
         $interval = $date1->diff($date2);
-        $days = $interval->days;   
+        $days = $interval->days;
 
         // If the user books at least 4 days, one of them is free.
         if ($days > 3) {
@@ -425,16 +405,27 @@ function checkout_shortcode() {
             $price = $row["price"];
             $total = $price * $discount;
             
+            if (isset($_SESSION['userID'])) {
+                $sql = 'select firstName, lastName from users where userID = ' . $_SESSION['userID'] . ';';
+                $r = $conn->query($sql);
+
+                if ($r->num_rows > 0) {
+                    $row = $r->fetch_assoc();
+                    $firstName = $row['firstName'];
+                    $lastName = $row['lastName'];
+                }
+            }
+
             //User confirmed details
             echo '<h3>Confirm your details:</h3>';
-            echo '<p><strong>Your Name:</strong> </p>';
+            echo '<p><strong>Your Name: </strong>' . $firstName . ' ' . $lastName . '</p>';
             echo '<p><strong>Booking Address:</strong> ' . $address . ', ' . $city . '.</p>';
             echo '<p><strong>Duration of Stay:</strong> ' . $arrival . ' to ' . $departure . ' (' . $days . ' day/s).</p>';
             echo '<p><strong>Price Per Night:</strong> $' . $price . '</p>';
             echo '<p><strong>Total Price:</strong> $' . $total . '' . $message . '</p>';
 
             // Allow the user to enter their payment information after confirming their booking details.
-            echo '<form method="POST" action="?page_id=48&id=' . $row["propertyID"] . '">'; 
+            echo '<form method="POST" action="?page_id=48&id=' . $listingId . '">'; 
             echo '<h3>Enter payment details:</h3>';
             echo '<label for="cardName">Name:</label><br>';
             echo '<input name="cardName" id="cardNumber" type="text" required><br>';
@@ -466,9 +457,9 @@ function process_data() {
             $arrival = $_POST['arrival'];
             $departure = $_POST['departure'];
             //Run an SQL query to create a booking that gets added to the database.                       
-            $query = 'insert into bookings (propertyID, arrivalDate, departureDate, cost) values (?, ?, ?, ?)';
+            $query = 'insert into bookings (propertyID, userID, arrivalDate, departureDate, cost) values (?, ?, ?, ?, ?)';
             $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, 'issi', $listingId, $arrival, $departure, $total);
+            mysqli_stmt_bind_param($stmt, 'iissi', $listingId, $_SESSION['userID'], $arrival, $departure, $total);
             mysqli_stmt_execute($stmt);
            
             echo 'Your booking has been created.';
@@ -482,8 +473,12 @@ function display_bookings() {
     ob_start();
     include(plugin_dir_path(__FILE__) . 'includes/dbconnect.php');
     
+    echo '<h2>My Bookings</h2>';
+
     //Get both bookings and properties from the database so they can be displayed alongside each other.
-    $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID;";
+    if (isset($_SESSION['userID'])) {
+        $userID = $_SESSION['userID'];
+    $sql = "select * from bookings inner join properties where properties.propertyID = bookings.propertyID and userID = $userID";
 
     if (isset($_POST['cancel_booking'])) {
         $bookingID = $_POST['bookingID'];
@@ -534,5 +529,9 @@ function display_bookings() {
 
     $output = ob_get_clean();
     return $output;
+    } else {
+        echo '<p>You must be logged in to view your bookings.</p>';
+    }
+    
 }
 add_shortcode('all_bookings', 'display_bookings');
