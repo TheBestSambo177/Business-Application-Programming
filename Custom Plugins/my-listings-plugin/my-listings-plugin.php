@@ -325,7 +325,7 @@ function property_booking_shortcode() {
                 if (availability($arrival, $departure, $listingId) == false) {
                     echo '<script>alert("Sorry, the dates you have selected are not available.");</script>';
                 } else {
-                    echo '<form method="POST" id="postDate" action="?page_id=30&id=' . $row["propertyID"] . '">'; 
+                    echo '<form method="POST" id="postDate" action="?page_id=30&id=' . $listingId . '">'; 
                     echo '<input type="hidden" name="arrival" value="' . $arrival . '">';
                     echo '<input type="hidden" name="departure" value="' . $departure . '">';
                     echo '</form>';
