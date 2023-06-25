@@ -97,9 +97,9 @@ Values (1, 'Jimmy', 'Novak', '0215722745', 'continental@gmail.com', SHA1('Jimmy2
 (2, 'Bobby', 'Singer', '0214279134', 'singerauto@gmail.com', SHA1('Bob3021'), '2194 Kripke Lane', 'FE4729F81S383', 'images/licences');
 
 Insert into properties (propertyID, address, price, city, specifications, images)
-Values (1, '308 Negra Arroyo Lane', '129.99', 'Auckland', 'Nice location', 'example1.png'),
-    (2, '557 Kripke Lane', '132.99', 'Taupo', 'Nice location', 'example2.png'),
-    (3, '2 Magnolia Crescent', '145.99', 'Napier', 'Nice location', 'example3.png');
+Values (1, '308 Negra Arroyo Lane', '129.99', 'Auckland', 'Nice location', 'example1.jpg'),
+    (2, '557 Kripke Lane', '132.99', 'Taupo', 'Nice location', 'example2.jpg'),
+    (3, '2 Magnolia Crescent', '145.99', 'Napier', 'Nice location', 'example3.jpg');
 
 Insert into bookings (bookingID, propertyID, userID, arrivalDate, departureDate, cost)
 Values (1, 3, 1, "2023-06-12", "2023-07-09", 1299),
