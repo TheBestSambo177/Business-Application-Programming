@@ -27,8 +27,7 @@ create table properties (
     price DECIMAL(13,2),
     city VARCHAR(50),
     specifications VARCHAR(200),
-    images VARCHAR(50),
-    booked BOOLEAN DEFAULT FALSE
+    images VARCHAR(50)
 );
 
 create table bookings (
@@ -97,10 +96,10 @@ Insert into users (userID, firstName, lastName, phoneNumber, email, password, ad
 Values (1, 'Jimmy', 'Novak', '0215722745', 'continental@gmail.com', SHA1('Jimmy20'), '132 Pine Street', 'WO3425627H234', 'images/licences'),
 (2, 'Bobby', 'Singer', '0214279134', 'singerauto@gmail.com', SHA1('Bob3021'), '2194 Kripke Lane', 'FE4729F81S383', 'images/licences');
 
-Insert into properties (propertyID, address, price, city, specifications, images, booked)
-Values (1, '308 Negra Arroyo Lane', '129.99', 'Auckland', 'Nice location', 'example1.png', 0),
-    (2, '557 Kripke Lane', '132.99', 'Taupo', 'Nice location', 'example2.png', 0),
-    (3, '2 Magnolia Crescent', '145.99', 'Napier', 'Nice location', 'example3.png', 1);
+Insert into properties (propertyID, address, price, city, specifications, images)
+Values (1, '308 Negra Arroyo Lane', '129.99', 'Auckland', 'Nice location', 'example1.png'),
+    (2, '557 Kripke Lane', '132.99', 'Taupo', 'Nice location', 'example2.png'),
+    (3, '2 Magnolia Crescent', '145.99', 'Napier', 'Nice location', 'example3.png');
 
 Insert into bookings (bookingID, propertyID, userID, arrivalDate, departureDate, cost)
 Values (1, 3, 1, "2023-06-12", "2023-07-09", 1299),
